@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   color-scheme: light;
   --bg: #f4f7f5;
   --panel: #ffffff;
@@ -125,6 +125,11 @@ h2 {
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 10px;
+  min-height: 46px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfb;
   color: var(--muted);
   font-size: 14px;
   font-weight: 700;
@@ -132,6 +137,8 @@ h2 {
 
 .toggle-row input {
   width: auto;
+  inline-size: 20px;
+  block-size: 20px;
 }
 
 .settings-panel {
@@ -479,9 +486,21 @@ h2 {
 .schedule-row,
 .cycle-row {
   display: grid;
-  grid-template-columns: 150px 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
   align-items: end;
+}
+
+.schedule-editor,
+.dose-cycle-editor {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbfcfb;
+}
+
+.dose-cycle-editor .meta {
+  margin: 0;
 }
 
 .schedule-row label,
