@@ -61,6 +61,10 @@ const translations = {
     enableAlerts: "Értesítések bekapcsolása",
     testSound: "Teszthang",
     todayTasks: "Mai teendők",
+    nextMedicines: "Következő gyógyszerek",
+    todayDose: "Mai adag",
+    saveTodayDose: "Mai adag mentése",
+    todayDoseSaved: "Mai adag módosítva.",
     clearToday: "Mai jelölések törlése",
     myMedications: "Gyógyszereim",
     name: "Név",
@@ -182,6 +186,10 @@ const translations = {
     enableAlerts: "Enable alerts",
     testSound: "Test sound",
     todayTasks: "Today's tasks",
+    nextMedicines: "Next medications",
+    todayDose: "Today's dose",
+    saveTodayDose: "Save today's dose",
+    todayDoseSaved: "Today's dose updated.",
     clearToday: "Clear today's marks",
     myMedications: "My medications",
     name: "Name",
@@ -303,6 +311,10 @@ const translations = {
     enableAlerts: "Benachrichtigungen aktivieren",
     testSound: "Testton",
     todayTasks: "Aufgaben heute",
+    nextMedicines: "Nächste Medikamente",
+    todayDose: "Heutige Dosis",
+    saveTodayDose: "Heutige Dosis speichern",
+    todayDoseSaved: "Heutige Dosis aktualisiert.",
     clearToday: "Heutige Markierungen löschen",
     myMedications: "Meine Medikamente",
     name: "Name",
@@ -447,6 +459,7 @@ const initialState = {
     },
   ],
   logs: [],
+  dailyDoseOverrides: {},
   measurements: [],
 };
 
@@ -466,6 +479,7 @@ const alarmTakenButton = document.querySelector("#alarmTakenButton");
 const alarmCloseButton = document.querySelector("#alarmCloseButton");
 const languageSelect = document.querySelector("#languageSelect");
 const doseList = document.querySelector("#doseList");
+const nextDosesWidget = document.querySelector("#nextDosesWidget");
 const medicationList = document.querySelector("#medicationList");
 const historyList = document.querySelector("#historyList");
 const patientForm = document.querySelector("#patientForm");
@@ -513,6 +527,7 @@ function migrateState(rawState) {
     })),
     patient: rawState.patient || initialState.patient,
     logs: rawState.logs || [],
+    dailyDoseOverrides: rawState.dailyDoseOverrides || {},
     measurements: rawState.measurements || [],
   };
 }
@@ -576,13 +591,23 @@ function activeDoses() {
           name: medication.name,
           notes: medication.notes,
           time: schedule.time,
-          dose: schedule.dose,
+          dose: doseForDay(medication.id, schedule),
+          defaultDose: schedule.dose,
           taken,
           logId: takenLog ? takenLog.id : "",
         };
       }),
     )
     .sort((left, right) => left.time.localeCompare(right.time));
+}
+
+function dailyDoseKey(day, medicationId, scheduleId) {
+  return `${day}::${medicationId}::${scheduleId}`;
+}
+
+function doseForDay(medicationId, schedule, day = todayKey()) {
+  const key = dailyDoseKey(day, medicationId, schedule.id);
+  return state.dailyDoseOverrides?.[key] || schedule.dose;
 }
 
 function takenLogFor(medicationId, schedule, day) {
@@ -602,6 +627,7 @@ function render() {
   renderHeader();
   renderScheduleRows();
   renderCountdown();
+  renderNextDosesWidget();
   renderDoses();
   renderPatient();
   renderMedications();
@@ -798,6 +824,28 @@ function renderCountdown() {
   countdownLabel.textContent = formatDuration(remainingMilliseconds);
 }
 
+function renderNextDosesWidget() {
+  const pending = activeDoses().filter((dose) => !dose.taken).slice(0, 3);
+
+  if (pending.length === 0) {
+    nextDosesWidget.innerHTML = `<div class="empty-state">${t("allTakenToday")}</div>`;
+    return;
+  }
+
+  nextDosesWidget.innerHTML = pending
+    .map(
+      (dose) => `
+        <article class="next-dose-card ${isLate(dose.time) ? "late" : ""}">
+          <span class="meta">${isLate(dose.time) ? t("statusLate") : t("statusDue")}</span>
+          <strong>${escapeHtml(dose.time)}</strong>
+          <div>${escapeHtml(displayMedicationName(dose.name))}</div>
+          <small>${escapeHtml(displayDose(dose.dose) || t("noDose"))}</small>
+        </article>
+      `,
+    )
+    .join("");
+}
+
 function renderDoses() {
   const doses = activeDoses();
 
@@ -816,6 +864,11 @@ function renderDoses() {
             <div class="title">${escapeHtml(displayMedicationName(dose.name))}</div>
             <div class="meta">${escapeHtml(displayDose(dose.dose) || t("noDose"))}</div>
             ${dose.notes ? `<div class="notes">${escapeHtml(displayNotes(dose.notes))}</div>` : ""}
+            <label class="today-dose-editor">
+              <span>${t("todayDose")}</span>
+              <input data-dose-override="${dose.id}" value="${escapeHtml(dose.dose)}" ${dose.taken ? "disabled" : ""} />
+              <button class="small-button" type="button" data-save-dose-override="${dose.id}" ${dose.taken ? "disabled" : ""}>${t("saveTodayDose")}</button>
+            </label>
           </div>
           <div>
             <span class="badge ${dose.taken ? "done" : ""}">${status}</span>
@@ -1324,6 +1377,25 @@ scheduleRows.addEventListener("click", (event) => {
 });
 
 doseList.addEventListener("click", (event) => {
+  const overrideButton = event.target.closest("[data-save-dose-override]");
+  if (overrideButton) {
+    const dose = activeDoses().find((item) => item.id === overrideButton.dataset.saveDoseOverride);
+    const input = doseList.querySelector(`[data-dose-override="${overrideButton.dataset.saveDoseOverride}"]`);
+    if (!dose || !input) return;
+
+    const key = dailyDoseKey(todayKey(), dose.medicationId, dose.scheduleId);
+    const value = input.value.trim();
+    state.dailyDoseOverrides = state.dailyDoseOverrides || {};
+    if (value && value !== dose.defaultDose) {
+      state.dailyDoseOverrides[key] = value;
+    } else {
+      delete state.dailyDoseOverrides[key];
+    }
+    saveState();
+    showTemporaryStatus(t("todayDoseSaved"));
+    return;
+  }
+
   const undoButton = event.target.closest("[data-undo-log]");
   if (undoButton) {
     undoTakenLog(undoButton.dataset.undoLog);
