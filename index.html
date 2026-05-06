@@ -92,6 +92,10 @@
               <option value="de">Deutsch</option>
             </select>
           </label>
+          <label class="toggle-row">
+            <input id="showNextWidgetInput" type="checkbox" />
+            <span data-i18n="showNextWidget">Következő gyógyszerek widget mutatása</span>
+          </label>
         </section>
 
         <section class="settings-panel">
@@ -144,7 +148,7 @@
           </label>
           <div class="schedule-editor">
             <div class="schedule-editor-head">
-              <span data-i18n="dailySchedule">Napi időpontok és adagok</span>
+              <span data-i18n="dailySchedule">Napi időpontok</span>
               <button id="addScheduleButton" class="small-button" type="button" data-i18n="addTime">Időpont hozzáadása</button>
             </div>
             <div id="scheduleRows" class="schedule-rows"></div>

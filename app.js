@@ -27,6 +27,7 @@ const translations = {
     afterHospital: "Kórház után",
     language: "Nyelv",
     settings: "Beállítások",
+    showNextWidget: "Következő gyógyszerek widget mutatása",
     today: "Ma",
     medications: "Gyógyszerek",
     patient: "Páciens",
@@ -70,7 +71,7 @@ const translations = {
     name: "Név",
     dose: "Adag",
     time: "Időpont",
-    dailySchedule: "Napi időpontok és adagok",
+    dailySchedule: "Napi időpontok",
     addTime: "Időpont hozzáadása",
     removeTime: "Törlés",
     doseCycle: "Ismétlődő változó adagolás",
@@ -158,6 +159,7 @@ const translations = {
     afterHospital: "After hospital",
     language: "Language",
     settings: "Settings",
+    showNextWidget: "Show next medications widget",
     today: "Today",
     medications: "Medications",
     patient: "Patient",
@@ -201,7 +203,7 @@ const translations = {
     name: "Name",
     dose: "Dose",
     time: "Time",
-    dailySchedule: "Daily times and doses",
+    dailySchedule: "Daily times",
     addTime: "Add time",
     removeTime: "Remove",
     doseCycle: "Repeating variable dosing",
@@ -289,6 +291,7 @@ const translations = {
     afterHospital: "Nach dem Krankenhaus",
     language: "Sprache",
     settings: "Einstellungen",
+    showNextWidget: "Widget für nächste Medikamente anzeigen",
     today: "Heute",
     medications: "Medikamente",
     patient: "Patient",
@@ -332,7 +335,7 @@ const translations = {
     name: "Name",
     dose: "Dosis",
     time: "Uhrzeit",
-    dailySchedule: "Tägliche Zeiten und Dosen",
+    dailySchedule: "Tägliche Zeiten",
     addTime: "Uhrzeit hinzufügen",
     removeTime: "Entfernen",
     doseCycle: "Wiederholende variable Dosierung",
@@ -478,6 +481,9 @@ const initialState = {
   ],
   logs: [],
   dailyDoseOverrides: {},
+  settings: {
+    showNextWidget: true,
+  },
   measurements: [],
 };
 
@@ -496,6 +502,7 @@ const alarmText = document.querySelector("#alarmText");
 const alarmTakenButton = document.querySelector("#alarmTakenButton");
 const alarmCloseButton = document.querySelector("#alarmCloseButton");
 const languageSelect = document.querySelector("#languageSelect");
+const showNextWidgetInput = document.querySelector("#showNextWidgetInput");
 const doseList = document.querySelector("#doseList");
 const nextDosesWidget = document.querySelector("#nextDosesWidget");
 const medicationList = document.querySelector("#medicationList");
@@ -551,6 +558,7 @@ function migrateState(rawState) {
     patient: rawState.patient || initialState.patient,
     logs: rawState.logs || [],
     dailyDoseOverrides: rawState.dailyDoseOverrides || {},
+    settings: { ...initialState.settings, ...(rawState.settings || {}) },
     measurements: rawState.measurements || [],
   };
 }
@@ -662,6 +670,7 @@ function render() {
   setDefaultMeasurementDateTime();
   setDefaultCycleStart();
   syncMeasurementEditState();
+  renderSettings();
   renderHeader();
   renderScheduleRows();
   renderDoseCycleRows();
@@ -675,6 +684,11 @@ function render() {
   renderTables();
   renderExport();
   renderHistory();
+}
+
+function renderSettings() {
+  showNextWidgetInput.checked = state.settings?.showNextWidget !== false;
+  document.querySelector(".next-widget").hidden = !showNextWidgetInput.checked;
 }
 
 function localDateValue(date) {
@@ -764,9 +778,7 @@ function renderScheduleRows() {
 
   [...scheduleRows.querySelectorAll(".schedule-row")].forEach((row) => {
     row.querySelector("[data-schedule-time-label]").textContent = t("time");
-    row.querySelector("[data-schedule-dose-label]").textContent = t("dose");
     row.querySelector("[data-remove-schedule]").textContent = t("removeTime");
-    row.querySelector("[data-schedule-dose]").placeholder = t("dosePlaceholder");
   });
 }
 
@@ -804,10 +816,6 @@ function addScheduleRow(time = "08:00", dose = "") {
     <label>
       <span data-schedule-time-label>${t("time")}</span>
       <input data-schedule-time type="time" required value="${escapeHtml(time)}" />
-    </label>
-    <label>
-      <span data-schedule-dose-label>${t("dose")}</span>
-      <input data-schedule-dose placeholder="${escapeHtml(t("dosePlaceholder"))}" value="${escapeHtml(dose)}" />
     </label>
     <button class="small-button" type="button" data-remove-schedule>${t("removeTime")}</button>
   `;
@@ -849,7 +857,7 @@ function readScheduleRows() {
     .map((row) => ({
       id: createId(),
       time: row.querySelector("[data-schedule-time]").value || "08:00",
-      dose: row.querySelector("[data-schedule-dose]").value.trim(),
+      dose: "",
     }))
     .filter((item) => item.time);
 }
@@ -989,7 +997,7 @@ function renderMedications() {
       (medication) => {
         const scheduleText = normalizeSchedule(medication)
           .sort((left, right) => left.time.localeCompare(right.time))
-          .map((item) => `${escapeHtml(item.time)} - ${escapeHtml(displayDose(item.dose) || t("noDose"))}`)
+          .map((item) => escapeHtml(item.time))
           .join("<br />");
 
         return `
@@ -1023,6 +1031,12 @@ function doseCycleText(medication) {
     .map((item, index) => `${t("cycleDay")} ${index + 1}: ${escapeHtml(displayDose(item.dose) || item.dose)}`)
     .join(" · ");
   return `<div class="notes">${t("cyclePattern")}: ${text}</div>`;
+}
+
+function doseCyclePlainText(medication) {
+  return (medication.doseCycle || [])
+    .map((item, index) => `${t("cycleDay")} ${index + 1}: ${displayDose(item.dose) || item.dose}`)
+    .join(" · ");
 }
 
 function interactionWarningFor(medication) {
@@ -1257,7 +1271,7 @@ function medicationTableHtml() {
         <tr>
           <td>${escapeHtml(displayMedicationName(medication.name))}</td>
           <td>${escapeHtml(schedule.time)}</td>
-          <td>${escapeHtml(displayDose(schedule.dose) || t("noDose"))}</td>
+          <td>${escapeHtml(doseCyclePlainText(medication) || displayDose(schedule.dose) || t("noDose"))}</td>
           <td>${medication.source === "otc" ? t("sourceOtc") : t("sourcePrescribed")}</td>
           <td>${escapeHtml(displayNotes(medication.notes || "-"))}</td>
           <td>${escapeHtml(medication.interactionNotes || "-")}</td>
@@ -1465,6 +1479,13 @@ languageSelect.addEventListener("change", () => {
   currentLanguage = languageSelect.value;
   writeStorage(LANGUAGE_KEY, currentLanguage);
   temporaryStatusText = "";
+  render();
+});
+
+showNextWidgetInput.addEventListener("change", () => {
+  state.settings = state.settings || {};
+  state.settings.showNextWidget = showNextWidgetInput.checked;
+  saveState();
   render();
 });
 
