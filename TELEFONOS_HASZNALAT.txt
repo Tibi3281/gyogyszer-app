@@ -1,0 +1,24 @@
+TELEFONOS / PWA PROBA
+
+Fajl:
+telefonos-proba.html
+
+Egyszeru fajlos hasznalat:
+1. Kuldd at a telefonos-proba.html fajlt a telefonra.
+   Peldaul: email, Google Drive, OneDrive, WhatsApp, Messenger vagy USB.
+
+2. A telefonon nyisd meg a fajlt bongeszoben.
+
+3. Az app szerver nelkul fut.
+
+PWA hasznalat:
+1. A teljes WebPrototype mappat kell kiszolgalni, nem csak a telefonos-proba.html fajlt.
+2. Nyisd meg a telefonon a kiszolgalt cimet.
+3. iPhone Safari: Megosztas -> Hozzaadas a fokepernyohoz.
+4. Android Chrome: menu -> Telepites vagy Hozzaadas a kezdokepernyohoz.
+
+Fontos:
+- A telefonos bongeszo korlatozhatja a hangjelzest es az ertesitest.
+- A PWA telepites/offline mukodes file:// megnyitasbol nem garantalt, kiszolgalt oldal kell hozza.
+- A gyogyszerek, meresek, paciensadatok, tablazatok, grafikonok es export nezet kiprobalhato.
+- Az adatok a telefon bongeszojenek helyi tarolojaban maradnak.

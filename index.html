@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Gyógyszer" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title data-i18n="appTitle">Gyógyszerellenőrző</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section id="alarmBanner" class="alarm-banner" hidden>
+        <div>
+          <p class="panel-label" data-i18n="medicineTime">Gyógyszer ideje</p>
+          <h2 id="alarmTitle">Most esedékes</h2>
+          <p id="alarmText" data-i18n="alarmHelp">Nyomd meg a Bevettem gombot, ha megtörtént.</p>
+        </div>
+        <div class="reminder-actions">
+          <button id="alarmTakenButton" class="primary-button" type="button" data-i18n="taken">Bevettem</button>
+          <button id="alarmCloseButton" class="ghost-button" type="button" data-i18n="close">Bezárás</button>
+        </div>
+      </section>
+
+      <section class="topbar" aria-label="Fejlec">
+        <div>
+          <p class="eyebrow" data-i18n="afterHospital">Kórház után</p>
+          <h1 data-i18n="appTitle">Gyógyszerellenőrző</h1>
+        </div>
+        <div class="today-card">
+          <span id="todayLabel"></span>
+          <strong id="progressLabel">0/0</strong>
+        </div>
+      </section>
+
+      <nav class="tabs" aria-label="Fulek">
+        <button class="tab is-active" data-view="today" data-i18n="today">Ma</button>
+        <button class="tab" data-view="medications" data-i18n="medications">Gyógyszerek</button>
+        <button class="tab" data-view="measurements" data-i18n="measurements">Mérések</button>
+        <button class="tab" data-view="charts" data-i18n="charts">Grafikonok</button>
+        <button class="tab" data-view="tables" data-i18n="tables">Táblázatok</button>
+        <button class="tab" data-view="export" data-i18n="export">Export</button>
+        <button class="tab" data-view="history" data-i18n="history">Előzmény</button>
+        <button class="tab" data-view="settings" data-i18n="settings">Beállítások</button>
+      </nav>
+
+      <section id="todayView" class="view is-active">
+        <section class="reminder-panel" aria-label="Következő emlékeztető">
+          <div>
+            <p class="panel-label" data-i18n="nextDose">Következő bevétel</p>
+            <h2 id="nextDoseLabel">Nincs aktív gyógyszer</h2>
+            <p id="countdownLabel" class="countdown">--:--:--</p>
+            <p id="alertStatusLabel" class="alert-status">Az értesítések még nincsenek bekapcsolva.</p>
+          </div>
+          <div class="reminder-actions">
+            <button id="enableAlertsButton" class="primary-button" type="button">Értesítések bekapcsolása</button>
+            <button id="testSoundButton" class="ghost-button" type="button" data-i18n="testSound">Teszthang</button>
+          </div>
+        </section>
+
+        <div class="section-head">
+          <h2 data-i18n="todayTasks">Mai teendők</h2>
+          <button id="resetTodayButton" class="ghost-button" type="button" data-i18n="clearToday">Mai jelölések törlése</button>
+        </div>
+        <div id="doseList" class="dose-list"></div>
+      </section>
+
+      <section id="settingsView" class="view">
+        <div class="section-head">
+          <h2 data-i18n="settings">Beállítások</h2>
+        </div>
+
+        <section class="settings-panel">
+          <h3 data-i18n="language">Nyelv</h3>
+          <label class="language-picker">
+            <span data-i18n="language">Nyelv</span>
+            <select id="languageSelect" aria-label="Nyelv">
+              <option value="hu">Magyar</option>
+              <option value="en">English</option>
+              <option value="de">Deutsch</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="settings-panel">
+          <div class="section-head">
+            <h3 data-i18n="patientData">Páciens adatok</h3>
+          </div>
+
+          <form id="patientForm" class="form-panel">
+            <label>
+              <span data-i18n="patientName">Név</span>
+              <input id="patientNameInput" autocomplete="name" />
+            </label>
+            <label>
+              <span data-i18n="socialSecurityNumber">Társadalombiztosító szám</span>
+              <input id="ssnInput" />
+            </label>
+            <label>
+              <span data-i18n="address">Cím</span>
+              <textarea id="addressInput" rows="3"></textarea>
+            </label>
+            <label>
+              <span data-i18n="diseaseList">Betegség lista</span>
+              <textarea id="diseaseListInput" rows="5" data-i18n-placeholder="diseaseListPlaceholder"></textarea>
+            </label>
+            <button class="primary-button" type="submit" data-i18n="savePatient">Páciens adatok mentése</button>
+          </form>
+        </section>
+
+        <section class="settings-panel">
+          <h3 data-i18n="healthImport">Egészség app import</h3>
+          <p class="meta" data-i18n="healthImportHelp">Apple Egészség exportból az export.xml fájlt válaszd ki. A prototípus a lépésszámot és testsúlyt olvassa be.</p>
+          <label>
+            <span data-i18n="healthFile">export.xml fájl</span>
+            <input id="healthImportInput" type="file" accept=".xml,text/xml" />
+          </label>
+          <button id="importHealthButton" class="primary-button" type="button" data-i18n="importHealthData">Egészség adatok importálása</button>
+          <p id="healthImportStatus" class="alert-status"></p>
+        </section>
+      </section>
+
+      <section id="medicationsView" class="view">
+        <div class="section-head">
+          <h2 data-i18n="myMedications">Gyógyszereim</h2>
+        </div>
+
+        <form id="medicationForm" class="form-panel">
+          <label>
+            <span data-i18n="name">Név</span>
+            <input id="nameInput" required placeholder="pl. Vérnyomáscsökkentő" data-i18n-placeholder="namePlaceholder" />
+          </label>
+          <div class="schedule-editor">
+            <div class="schedule-editor-head">
+              <span data-i18n="dailySchedule">Napi időpontok és adagok</span>
+              <button id="addScheduleButton" class="small-button" type="button" data-i18n="addTime">Időpont hozzáadása</button>
+            </div>
+            <div id="scheduleRows" class="schedule-rows"></div>
+          </div>
+          <label>
+            <span data-i18n="notes">Megjegyzés</span>
+            <textarea id="notesInput" rows="3" placeholder="pl. reggeli után" data-i18n-placeholder="notesPlaceholder"></textarea>
+          </label>
+          <label>
+            <span data-i18n="medicationSource">Gyógyszer típusa</span>
+            <select id="medicationSourceInput">
+              <option value="prescribed" data-i18n="sourcePrescribed">Orvos által írt</option>
+              <option value="otc" data-i18n="sourceOtc">Nem orvosi / alkalmi</option>
+            </select>
+          </label>
+          <label>
+            <span data-i18n="interactionNotes">Kereszthatás / figyelmeztetés</span>
+            <textarea id="interactionNotesInput" rows="3" data-i18n-placeholder="interactionPlaceholder"></textarea>
+          </label>
+          <button class="primary-button" type="submit" data-i18n="addMedication">Gyógyszer hozzáadása</button>
+        </form>
+
+        <div id="medicationList" class="medication-list"></div>
+      </section>
+
+      <section id="measurementsView" class="view">
+        <div class="section-head">
+          <h2 data-i18n="measurements">Mérések</h2>
+          <button id="clearMeasurementsButton" class="ghost-button" type="button" data-i18n="clearMeasurements">Mérések törlése</button>
+        </div>
+
+        <form id="measurementForm" class="form-panel">
+          <label>
+            <span data-i18n="measurementDate">Mérés dátuma</span>
+            <input id="measurementDateInput" type="date" />
+          </label>
+          <label>
+            <span data-i18n="measurementTime">Mérés ideje</span>
+            <input id="measurementTimeInput" type="time" />
+          </label>
+          <label>
+            INR
+            <input id="inrInput" type="number" min="0.8" max="10" step="0.1" placeholder="pl. 2.4" />
+          </label>
+          <label>
+            <span data-i18n="bloodPressure">Vérnyomás</span>
+            <input id="bloodPressureInput" placeholder="pl. 125/80" />
+          </label>
+          <label>
+            <span data-i18n="pulse">Pulzus</span>
+            <input id="pulseInput" type="number" min="30" max="220" step="1" placeholder="pl. 72" />
+          </label>
+          <label>
+            <span data-i18n="weight">Súly</span>
+            <input id="weightInput" type="number" min="20" max="250" step="0.1" placeholder="pl. 82.5" />
+          </label>
+          <label>
+            <span data-i18n="steps">Lépésszám</span>
+            <input id="stepsInput" type="number" min="0" step="1" placeholder="pl. 4500" />
+          </label>
+          <label>
+            <span data-i18n="temperature">Testhő</span>
+            <input id="temperatureInput" type="number" min="30" max="45" step="0.1" placeholder="pl. 36.8" />
+          </label>
+          <label class="wide-field">
+            <span data-i18n="notes">Megjegyzés</span>
+            <textarea id="measurementNotesInput" rows="3" placeholder="pl. reggel, gyógyszer előtt" data-i18n-placeholder="measurementNotesPlaceholder"></textarea>
+          </label>
+          <button id="saveMeasurementButton" class="primary-button" type="submit" data-i18n="saveMeasurement">Mérés mentése</button>
+          <button id="cancelMeasurementEditButton" class="ghost-button" type="button" hidden data-i18n="cancelEdit">Mégse</button>
+        </form>
+
+        <div id="latestMeasurements" class="summary-grid"></div>
+        <div id="measurementList" class="history-list"></div>
+      </section>
+
+      <section id="chartsView" class="view">
+        <div class="section-head">
+          <h2 data-i18n="charts">Grafikonok</h2>
+        </div>
+        <div id="chartsContent" class="chart-grid"></div>
+      </section>
+
+      <section id="tablesView" class="view">
+        <div class="section-head">
+          <h2 data-i18n="tables">Táblázatok</h2>
+        </div>
+        <div id="tablesContent" class="table-stack"></div>
+      </section>
+
+      <section id="exportView" class="view">
+        <div class="section-head">
+          <h2 data-i18n="export">Export</h2>
+          <button id="printPdfButton" class="primary-button" type="button" data-i18n="printPdf">PDF mentés / nyomtatás</button>
+        </div>
+        <div id="exportContent" class="export-paper"></div>
+      </section>
+
+      <section id="historyView" class="view">
+        <div class="section-head">
+          <h2 data-i18n="history">Előzmény</h2>
+          <button id="clearHistoryButton" class="ghost-button" type="button" data-i18n="clearHistory">Előzmény törlése</button>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
