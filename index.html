@@ -149,6 +149,18 @@
             </div>
             <div id="scheduleRows" class="schedule-rows"></div>
           </div>
+          <div class="dose-cycle-editor">
+            <div class="schedule-editor-head">
+              <span data-i18n="doseCycle">Ismétlődő változó adagolás</span>
+              <button id="addCycleDoseButton" class="small-button" type="button" data-i18n="addCycleDay">Nap hozzáadása</button>
+            </div>
+            <label>
+              <span data-i18n="cycleStart">Minta kezdőnapja</span>
+              <input id="cycleStartInput" type="date" />
+            </label>
+            <p class="meta" data-i18n="doseCycleHelp">Példa: 1. nap 1 tabletta, 2. nap 3/4 tabletta. A minta ezután ismétlődik.</p>
+            <div id="doseCycleRows" class="cycle-rows"></div>
+          </div>
           <label>
             <span data-i18n="notes">Megjegyzés</span>
             <textarea id="notesInput" rows="3" placeholder="pl. reggeli után" data-i18n-placeholder="notesPlaceholder"></textarea>

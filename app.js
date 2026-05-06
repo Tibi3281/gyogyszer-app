@@ -73,6 +73,12 @@ const translations = {
     dailySchedule: "Napi időpontok és adagok",
     addTime: "Időpont hozzáadása",
     removeTime: "Törlés",
+    doseCycle: "Ismétlődő változó adagolás",
+    cycleStart: "Minta kezdőnapja",
+    addCycleDay: "Nap hozzáadása",
+    cycleDay: "Nap",
+    doseCycleHelp: "Példa: 1. nap 1 tabletta, 2. nap 3/4 tabletta. A minta ezután ismétlődik.",
+    cyclePattern: "Ismétlődő adagolás",
     notes: "Megjegyzés",
     addMedication: "Gyógyszer hozzáadása",
     medicationSource: "Gyógyszer típusa",
@@ -198,6 +204,12 @@ const translations = {
     dailySchedule: "Daily times and doses",
     addTime: "Add time",
     removeTime: "Remove",
+    doseCycle: "Repeating variable dosing",
+    cycleStart: "Pattern start date",
+    addCycleDay: "Add day",
+    cycleDay: "Day",
+    doseCycleHelp: "Example: day 1: 1 tablet, day 2: 3/4 tablet. The pattern then repeats.",
+    cyclePattern: "Repeating dose pattern",
     notes: "Notes",
     addMedication: "Add medication",
     medicationSource: "Medication type",
@@ -323,6 +335,12 @@ const translations = {
     dailySchedule: "Tägliche Zeiten und Dosen",
     addTime: "Uhrzeit hinzufügen",
     removeTime: "Entfernen",
+    doseCycle: "Wiederholende variable Dosierung",
+    cycleStart: "Startdatum des Musters",
+    addCycleDay: "Tag hinzufügen",
+    cycleDay: "Tag",
+    doseCycleHelp: "Beispiel: Tag 1: 1 Tablette, Tag 2: 3/4 Tablette. Das Muster wiederholt sich danach.",
+    cyclePattern: "Wiederholendes Dosismuster",
     notes: "Notizen",
     addMedication: "Medikament hinzufügen",
     medicationSource: "Medikamententyp",
@@ -486,6 +504,9 @@ const patientForm = document.querySelector("#patientForm");
 const medicationForm = document.querySelector("#medicationForm");
 const scheduleRows = document.querySelector("#scheduleRows");
 const addScheduleButton = document.querySelector("#addScheduleButton");
+const doseCycleRows = document.querySelector("#doseCycleRows");
+const addCycleDoseButton = document.querySelector("#addCycleDoseButton");
+const cycleStartInput = document.querySelector("#cycleStartInput");
 const measurementForm = document.querySelector("#measurementForm");
 const saveMeasurementButton = document.querySelector("#saveMeasurementButton");
 const cancelMeasurementEditButton = document.querySelector("#cancelMeasurementEditButton");
@@ -522,6 +543,8 @@ function migrateState(rawState) {
     medications: (rawState.medications || []).map((medication) => ({
       ...medication,
       schedule: normalizeSchedule(medication),
+      doseCycleStart: medication.doseCycleStart || todayKey(),
+      doseCycle: Array.isArray(medication.doseCycle) ? medication.doseCycle : [],
       source: medication.source || "prescribed",
       interactionNotes: medication.interactionNotes || "",
     })),
@@ -589,9 +612,10 @@ function activeDoses() {
           medicationId: medication.id,
           scheduleId: schedule.id,
           name: medication.name,
+          medication,
           notes: medication.notes,
           time: schedule.time,
-          dose: doseForDay(medication.id, schedule),
+          dose: doseForDay(medication, schedule),
           defaultDose: schedule.dose,
           taken,
           logId: takenLog ? takenLog.id : "",
@@ -605,9 +629,22 @@ function dailyDoseKey(day, medicationId, scheduleId) {
   return `${day}::${medicationId}::${scheduleId}`;
 }
 
-function doseForDay(medicationId, schedule, day = todayKey()) {
-  const key = dailyDoseKey(day, medicationId, schedule.id);
-  return state.dailyDoseOverrides?.[key] || schedule.dose;
+function doseForDay(medication, schedule, day = todayKey()) {
+  const key = dailyDoseKey(day, medication.id, schedule.id);
+  return state.dailyDoseOverrides?.[key] || cycleDoseForDay(medication, day) || schedule.dose;
+}
+
+function cycleDoseForDay(medication, day = todayKey()) {
+  const cycle = (medication.doseCycle || []).filter((item) => item.dose);
+  if (cycle.length === 0) return "";
+
+  const start = new Date(`${medication.doseCycleStart || day}T12:00:00`);
+  const current = new Date(`${day}T12:00:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(current.getTime())) return "";
+
+  const diffDays = Math.floor((current - start) / 86400000);
+  const index = ((diffDays % cycle.length) + cycle.length) % cycle.length;
+  return cycle[index]?.dose || "";
 }
 
 function takenLogFor(medicationId, schedule, day) {
@@ -623,9 +660,11 @@ function takenLogFor(medicationId, schedule, day) {
 function render() {
   applyTranslations();
   setDefaultMeasurementDateTime();
+  setDefaultCycleStart();
   syncMeasurementEditState();
   renderHeader();
   renderScheduleRows();
+  renderDoseCycleRows();
   renderCountdown();
   renderNextDosesWidget();
   renderDoses();
@@ -731,6 +770,25 @@ function renderScheduleRows() {
   });
 }
 
+function setDefaultCycleStart() {
+  if (cycleStartInput && !cycleStartInput.value) cycleStartInput.value = todayKey();
+}
+
+function renderDoseCycleRows() {
+  if (doseCycleRows.children.length === 0) {
+    addDoseCycleRow("");
+    addDoseCycleRow("");
+    return;
+  }
+
+  [...doseCycleRows.querySelectorAll(".cycle-row")].forEach((row, index) => {
+    row.querySelector("[data-cycle-day-label]").textContent = `${t("cycleDay")} ${index + 1}`;
+    row.querySelector("[data-cycle-dose-label]").textContent = t("dose");
+    row.querySelector("[data-remove-cycle-dose]").textContent = t("removeTime");
+    row.querySelector("[data-cycle-dose]").placeholder = t("dosePlaceholder");
+  });
+}
+
 function renderPatient() {
   const patient = state.patient || {};
   document.querySelector("#patientNameInput").value = patient.name || "";
@@ -757,10 +815,32 @@ function addScheduleRow(time = "08:00", dose = "") {
   updateScheduleRemoveButtons();
 }
 
+function addDoseCycleRow(dose = "") {
+  const row = document.createElement("div");
+  row.className = "cycle-row";
+  const index = doseCycleRows.children.length + 1;
+  row.innerHTML = `
+    <label>
+      <span data-cycle-day-label>${t("cycleDay")} ${index}</span>
+      <input data-cycle-dose placeholder="${escapeHtml(t("dosePlaceholder"))}" value="${escapeHtml(dose)}" />
+    </label>
+    <button class="small-button" type="button" data-remove-cycle-dose>${t("removeTime")}</button>
+  `;
+  doseCycleRows.appendChild(row);
+  updateCycleRemoveButtons();
+}
+
 function updateScheduleRemoveButtons() {
   const rows = [...scheduleRows.querySelectorAll(".schedule-row")];
   rows.forEach((row) => {
     row.querySelector("[data-remove-schedule]").disabled = rows.length === 1;
+  });
+}
+
+function updateCycleRemoveButtons() {
+  const rows = [...doseCycleRows.querySelectorAll(".cycle-row")];
+  rows.forEach((row) => {
+    row.querySelector("[data-remove-cycle-dose]").disabled = rows.length <= 1;
   });
 }
 
@@ -774,9 +854,25 @@ function readScheduleRows() {
     .filter((item) => item.time);
 }
 
+function readDoseCycleRows() {
+  return [...doseCycleRows.querySelectorAll(".cycle-row")]
+    .map((row, index) => ({
+      day: index + 1,
+      dose: row.querySelector("[data-cycle-dose]").value.trim(),
+    }))
+    .filter((item) => item.dose);
+}
+
 function resetScheduleRows() {
   scheduleRows.innerHTML = "";
   addScheduleRow("08:00", "");
+}
+
+function resetDoseCycleRows() {
+  doseCycleRows.innerHTML = "";
+  addDoseCycleRow("");
+  addDoseCycleRow("");
+  setDefaultCycleStart();
 }
 
 function renderHeader() {
@@ -901,6 +997,7 @@ function renderMedications() {
           <div>
             <div class="title">${escapeHtml(displayMedicationName(medication.name))}</div>
             <div class="meta">${scheduleText}</div>
+            ${doseCycleText(medication)}
             ${medication.notes ? `<div class="notes">${escapeHtml(displayNotes(medication.notes))}</div>` : ""}
             <div class="notes">${t("source")}: ${medication.source === "otc" ? t("sourceOtc") : t("sourcePrescribed")}</div>
             ${interactionWarningFor(medication)}
@@ -916,6 +1013,16 @@ function renderMedications() {
       },
     )
     .join("");
+}
+
+function doseCycleText(medication) {
+  const cycle = medication.doseCycle || [];
+  if (cycle.length === 0) return "";
+
+  const text = cycle
+    .map((item, index) => `${t("cycleDay")} ${index + 1}: ${escapeHtml(displayDose(item.dose) || item.dose)}`)
+    .join(" · ");
+  return `<div class="notes">${t("cyclePattern")}: ${text}</div>`;
 }
 
 function interactionWarningFor(medication) {
@@ -1365,6 +1472,10 @@ addScheduleButton.addEventListener("click", () => {
   addScheduleRow("08:00", "");
 });
 
+addCycleDoseButton.addEventListener("click", () => {
+  addDoseCycleRow("");
+});
+
 scheduleRows.addEventListener("click", (event) => {
   const button = event.target.closest("[data-remove-schedule]");
   if (!button) return;
@@ -1374,6 +1485,18 @@ scheduleRows.addEventListener("click", (event) => {
 
   button.closest(".schedule-row").remove();
   updateScheduleRemoveButtons();
+});
+
+doseCycleRows.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-remove-cycle-dose]");
+  if (!button) return;
+
+  const rows = doseCycleRows.querySelectorAll(".cycle-row");
+  if (rows.length <= 1) return;
+
+  button.closest(".cycle-row").remove();
+  updateCycleRemoveButtons();
+  renderDoseCycleRows();
 });
 
 doseList.addEventListener("click", (event) => {
@@ -1461,11 +1584,14 @@ medicationList.addEventListener("click", (event) => {
 medicationForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const schedule = readScheduleRows();
+  const doseCycle = readDoseCycleRows();
 
   state.medications.push({
     id: createId(),
     name: document.querySelector("#nameInput").value.trim(),
     schedule,
+    doseCycleStart: cycleStartInput.value || todayKey(),
+    doseCycle,
     notes: document.querySelector("#notesInput").value.trim(),
     source: document.querySelector("#medicationSourceInput").value,
     interactionNotes: document.querySelector("#interactionNotesInput").value.trim(),
@@ -1474,6 +1600,7 @@ medicationForm.addEventListener("submit", (event) => {
 
   medicationForm.reset();
   resetScheduleRows();
+  resetDoseCycleRows();
   saveState();
   render();
 });

@@ -439,7 +439,8 @@ h2 {
   grid-column: 1 / -1;
 }
 
-.schedule-editor {
+.schedule-editor,
+.dose-cycle-editor {
   grid-column: 1 / -1;
   display: grid;
   gap: 10px;
@@ -455,19 +456,22 @@ h2 {
   font-weight: 700;
 }
 
-.schedule-rows {
+.schedule-rows,
+.cycle-rows {
   display: grid;
   gap: 10px;
 }
 
-.schedule-row {
+.schedule-row,
+.cycle-row {
   display: grid;
   grid-template-columns: 150px 1fr auto;
   gap: 10px;
   align-items: end;
 }
 
-.schedule-row label {
+.schedule-row label,
+.cycle-row label {
   min-width: 0;
 }
 
@@ -641,7 +645,8 @@ th {
     grid-template-columns: 1fr;
   }
 
-  .schedule-row {
+  .schedule-row,
+  .cycle-row {
     grid-template-columns: 1fr;
   }
 
