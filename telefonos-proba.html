@@ -1,3 +1,1209 @@
+<!doctype html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Gyógyszer" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title data-i18n="appTitle">Gyógyszerellenőrző</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <style>
+﻿:root {
+  color-scheme: light;
+  --bg: #f4f7f5;
+  --panel: #ffffff;
+  --ink: #1d2522;
+  --muted: #63706a;
+  --line: #d9e0dc;
+  --brand: #0f766e;
+  --brand-dark: #115e59;
+  --ok: #16803c;
+  --warn: #b25c00;
+  --shadow: 0 18px 48px rgba(23, 45, 39, 0.13);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button,
+select,
+input,
+textarea {
+  max-width: 100%;
+}
+
+.app-shell {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  padding: 28px 16px 40px;
+}
+
+.topbar {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: var(--brand);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0;
+  font-size: clamp(30px, 5vw, 48px);
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: 22px;
+}
+
+.today-card {
+  min-width: 148px;
+  display: grid;
+  align-content: center;
+  justify-items: end;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.today-card span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.today-card strong {
+  font-size: 28px;
+}
+
+.language-picker {
+  min-width: 138px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.language-picker select {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfb;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.toggle-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfb;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.toggle-row input {
+  width: auto;
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.settings-panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.settings-panel h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.tab,
+.ghost-button,
+.primary-button,
+.take-button,
+.small-button {
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.tab {
+  min-height: 44px;
+  background: #e6ece8;
+  color: var(--ink);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tab.is-active {
+  background: var(--brand);
+  color: #fff;
+}
+
+.view {
+  display: none;
+}
+
+.view.is-active {
+  display: block;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0 14px;
+}
+
+.dose-list,
+.medication-list,
+.history-list,
+.summary-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.summary-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+
+.reminder-panel {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.next-widget {
+  margin-bottom: 18px;
+}
+
+.compact-head {
+  margin-bottom: 10px;
+}
+
+.next-dose-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.next-dose-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+
+.next-dose-card.late {
+  border-color: #b25c00;
+  background: #fff8ed;
+}
+
+.next-dose-card strong {
+  display: block;
+  margin: 4px 0;
+  font-size: 24px;
+}
+
+.next-dose-card small {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.alarm-banner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  margin-bottom: 18px;
+  border: 2px solid #b25c00;
+  border-radius: 8px;
+  background: #fff8ed;
+  box-shadow: var(--shadow);
+}
+
+.alarm-banner[hidden] {
+  display: none;
+}
+
+.alarm-banner h2 {
+  color: #7a3c00;
+}
+
+.panel-label {
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.countdown {
+  margin: 8px 0 0;
+  font-size: 34px;
+  font-weight: 900;
+  color: var(--brand-dark);
+}
+
+.alert-status {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.reminder-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.dose-card,
+.medication-card,
+.history-card,
+.summary-card,
+.form-panel,
+.empty-state {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.dose-card,
+.medication-card,
+.history-card,
+.summary-card,
+.empty-state {
+  padding: 16px;
+}
+
+.summary-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 24px;
+}
+
+.dose-card {
+  display: grid;
+  grid-template-columns: 76px 1fr auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.today-dose-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+  max-width: 430px;
+  margin-top: 10px;
+}
+
+.today-dose-editor span {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.time {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.title {
+  margin-bottom: 4px;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.meta,
+.notes {
+  color: var(--muted);
+}
+
+.notes {
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(178, 92, 0, 0.12);
+  color: var(--warn);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.badge.done {
+  background: rgba(22, 128, 60, 0.12);
+  color: var(--ok);
+}
+
+.take-button,
+.primary-button {
+  min-height: 42px;
+  padding: 0 16px;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 800;
+}
+
+.take-button:hover,
+.primary-button:hover {
+  background: var(--brand-dark);
+}
+
+.take-button:disabled {
+  cursor: default;
+  background: #9bb5af;
+}
+
+.undo-button {
+  background: #6b7280;
+}
+
+.undo-button:hover {
+  background: #4b5563;
+}
+
+.ghost-button,
+.small-button {
+  min-height: 38px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.danger-button {
+  border-color: rgba(178, 92, 0, 0.45);
+  color: #7a3c00;
+}
+
+.form-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.form-panel label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.form-panel .wide-field {
+  grid-column: 1 / -1;
+}
+
+.schedule-editor,
+.dose-cycle-editor {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+}
+
+.schedule-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.schedule-rows,
+.cycle-rows {
+  display: grid;
+  gap: 10px;
+}
+
+.schedule-row,
+.cycle-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.schedule-editor,
+.dose-cycle-editor {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbfcfb;
+}
+
+.dose-cycle-editor .meta {
+  margin: 0;
+}
+
+.schedule-row label,
+.cycle-row label {
+  min-width: 0;
+}
+
+.form-panel label:nth-child(4),
+.form-panel label:nth-child(5),
+.form-panel button {
+  grid-column: 1 / -1;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbfcfb;
+  color: var(--ink);
+}
+
+.medication-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.history-card {
+  display: grid;
+  gap: 4px;
+}
+
+.card-actions {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+}
+
+.empty-state {
+  color: var(--muted);
+}
+
+.table-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.chart-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.chart-card h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.chart-head {
+  margin-bottom: 10px;
+}
+
+.line-chart {
+  width: 100%;
+  min-height: 180px;
+}
+
+.line-chart polyline {
+  stroke: var(--brand);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.line-chart circle {
+  fill: var(--brand-dark);
+}
+
+.timeline-chart circle {
+  fill: #b25c00;
+}
+
+.timeline-chart .dose-bar {
+  fill: rgba(178, 92, 0, 0.22);
+  stroke: rgba(178, 92, 0, 0.55);
+  stroke-width: 1;
+}
+
+.timeline-chart .inr-line-sample {
+  stroke: var(--brand);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.line-chart .axis {
+  stroke: var(--line);
+  stroke-width: 2;
+}
+
+.chart-label {
+  fill: var(--muted);
+  font-size: 13px;
+}
+
+.dose-label,
+.inr-label {
+  fill: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.correlation-panel {
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.correlation-panel h4 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.table-panel,
+.export-paper {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.table-panel h3 {
+  margin: 14px 0 8px;
+  font-size: 16px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--line);
+  padding: 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.warning-box {
+  border: 1px solid rgba(178, 92, 0, 0.35);
+  border-radius: 8px;
+  background: #fff8ed;
+  color: #7a3c00;
+  padding: 12px;
+  margin: 10px 0;
+}
+
+.export-paper {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.export-section {
+  margin-top: 20px;
+}
+
+@media (max-width: 640px) {
+  .topbar,
+  .section-head,
+  .reminder-panel,
+  .alarm-banner,
+  .dose-card,
+  .medication-card {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .today-card {
+    justify-items: start;
+  }
+
+  .form-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .next-dose-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-row,
+  .cycle-row {
+    grid-template-columns: 1fr;
+  }
+
+  .today-dose-editor {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+
+  .take-button {
+    width: 100%;
+  }
+}
+
+@media (orientation: portrait) and (max-width: 820px) {
+  .app-shell {
+    padding: 16px 10px 28px;
+  }
+
+  .topbar {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-size: 30px;
+    line-height: 1.08;
+  }
+
+  h2 {
+    font-size: 19px;
+  }
+
+  .today-card {
+    min-width: 0;
+    padding: 12px;
+  }
+
+  .today-card strong {
+    font-size: 22px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin: 0 -10px 14px;
+    padding-left: 10px;
+    padding-right: 10px;
+    scroll-snap-type: x proximity;
+  }
+
+  .tab {
+    flex: 0 0 auto;
+    min-width: 104px;
+    min-height: 40px;
+    padding: 0 12px;
+    scroll-snap-align: start;
+  }
+
+  .reminder-panel,
+  .alarm-banner,
+  .form-panel,
+  .settings-panel,
+  .table-panel,
+  .export-paper {
+    padding: 12px;
+  }
+
+  .countdown {
+    font-size: 28px;
+  }
+
+  .section-head {
+    align-items: stretch;
+  }
+
+  .section-head .ghost-button,
+  .section-head .primary-button {
+    width: 100%;
+  }
+
+  .dose-card {
+    gap: 10px;
+  }
+
+  .time {
+    font-size: 20px;
+  }
+
+  .title {
+    font-size: 17px;
+  }
+
+  .badge {
+    margin-bottom: 8px;
+  }
+
+  .reminder-actions {
+    width: 100%;
+  }
+
+  .reminder-actions button {
+    width: 100%;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-card strong {
+    font-size: 21px;
+  }
+
+  .card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .card-actions button {
+    width: 100%;
+  }
+
+  .table-scroll {
+    margin: 0 -12px;
+    padding: 0 12px;
+  }
+
+  table {
+    min-width: 680px;
+  }
+
+  th,
+  td {
+    padding: 8px;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .topbar,
+  .tabs,
+  .view:not(#exportView) {
+    display: none !important;
+  }
+
+  .app-shell {
+    width: 100%;
+    padding: 0;
+  }
+
+  #exportView {
+    display: block !important;
+  }
+
+  .section-head button {
+    display: none;
+  }
+
+  .export-paper {
+    border: 0;
+    box-shadow: none;
+    max-width: none;
+    padding: 0;
+  }
+
+  table {
+    break-inside: auto;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+}
+
+    </style>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section id="alarmBanner" class="alarm-banner" hidden>
+        <div>
+          <p class="panel-label" data-i18n="medicineTime">Gyógyszer ideje</p>
+          <h2 id="alarmTitle">Most esedékes</h2>
+          <p id="alarmText" data-i18n="alarmHelp">Nyomd meg a Bevettem gombot, ha megtörtént.</p>
+        </div>
+        <div class="reminder-actions">
+          <button id="alarmTakenButton" class="primary-button" type="button" data-i18n="taken">Bevettem</button>
+          <button id="alarmCloseButton" class="ghost-button" type="button" data-i18n="close">Bezárás</button>
+        </div>
+      </section>
+
+      <section class="topbar" aria-label="Fejlec">
+        <div>
+          <p class="eyebrow" data-i18n="afterHospital">Kórház után</p>
+          <h1 data-i18n="appTitle">Gyógyszerellenőrző</h1>
+        </div>
+        <div class="today-card">
+          <span id="todayLabel"></span>
+          <strong id="progressLabel">0/0</strong>
+        </div>
+      </section>
+
+      <nav class="tabs" aria-label="Fulek">
+        <button class="tab is-active" data-view="today" data-i18n="today">Ma</button>
+        <button class="tab" data-view="medications" data-i18n="medications">Gyógyszerek</button>
+        <button class="tab" data-view="measurements" data-i18n="measurements">Mérések</button>
+        <button class="tab" data-view="charts" data-i18n="charts">Grafikonok</button>
+        <button class="tab" data-view="tables" data-i18n="tables">Táblázatok</button>
+        <button class="tab" data-view="export" data-i18n="export">Export</button>
+        <button class="tab" data-view="history" data-i18n="medicationDiary">Gyógyszernapló</button>
+        <button class="tab" data-view="settings" data-i18n="settings">Beállítások</button>
+      </nav>
+
+      <section id="todayView" class="view is-active">
+        <section class="reminder-panel" aria-label="Következő emlékeztető">
+          <div>
+            <p class="panel-label" data-i18n="nextDose">Következő bevétel</p>
+            <h2 id="nextDoseLabel">Nincs aktív gyógyszer</h2>
+            <p id="countdownLabel" class="countdown">--:--:--</p>
+            <p id="alertStatusLabel" class="alert-status">Az értesítések még nincsenek bekapcsolva.</p>
+          </div>
+          <div class="reminder-actions">
+            <button id="enableAlertsButton" class="primary-button" type="button">Értesítések bekapcsolása</button>
+            <button id="testSoundButton" class="ghost-button" type="button" data-i18n="testSound">Teszthang</button>
+          </div>
+        </section>
+
+        <section class="next-widget" aria-label="Következő gyógyszerek">
+          <div class="section-head compact-head">
+            <h2 data-i18n="nextMedicines">Következő gyógyszerek</h2>
+          </div>
+          <div id="nextDosesWidget" class="next-dose-grid"></div>
+        </section>
+
+        <div class="section-head">
+          <h2 data-i18n="todayTasks">Mai teendők</h2>
+          <button id="resetTodayButton" class="ghost-button" type="button" data-i18n="clearToday">Mai jelölések törlése</button>
+        </div>
+        <div id="doseList" class="dose-list"></div>
+      </section>
+
+      <section id="settingsView" class="view">
+        <div class="section-head">
+          <h2 data-i18n="settings">Beállítások</h2>
+        </div>
+
+        <section class="settings-panel">
+          <h3 data-i18n="language">Nyelv</h3>
+          <label class="language-picker">
+            <span data-i18n="language">Nyelv</span>
+            <select id="languageSelect" aria-label="Nyelv">
+              <option value="hu">Magyar</option>
+              <option value="en">English</option>
+              <option value="de">Deutsch</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="settings-panel">
+          <h3 data-i18n="appearance">Megjelenés</h3>
+          <label class="toggle-row">
+            <input id="showNextWidgetInput" type="checkbox" />
+            <span data-i18n="showNextWidget">Következő gyógyszerek widget mutatása</span>
+          </label>
+        </section>
+
+        <section class="settings-panel">
+          <div class="section-head">
+            <h3 data-i18n="patientData">Páciens adatok</h3>
+          </div>
+
+          <form id="patientForm" class="form-panel">
+            <label>
+              <span data-i18n="patientName">Név</span>
+              <input id="patientNameInput" autocomplete="name" />
+            </label>
+            <label>
+              <span data-i18n="socialSecurityNumber">Társadalombiztosító szám</span>
+              <input id="ssnInput" />
+            </label>
+            <label>
+              <span data-i18n="address">Cím</span>
+              <textarea id="addressInput" rows="3"></textarea>
+            </label>
+            <label>
+              <span data-i18n="diseaseList">Betegség lista</span>
+              <textarea id="diseaseListInput" rows="5" data-i18n-placeholder="diseaseListPlaceholder"></textarea>
+            </label>
+            <button class="primary-button" type="submit" data-i18n="savePatient">Páciens adatok mentése</button>
+          </form>
+        </section>
+
+        <section class="settings-panel">
+          <h3 data-i18n="healthImport">Egészség app import</h3>
+          <p class="meta" data-i18n="healthImportHelp">Apple Egészség exportból az export.xml fájlt válaszd ki. A prototípus a lépésszámot és testsúlyt olvassa be.</p>
+          <label>
+            <span data-i18n="healthFile">export.xml fájl</span>
+            <input id="healthImportInput" type="file" accept=".xml,text/xml" />
+          </label>
+          <button id="importHealthButton" class="primary-button" type="button" data-i18n="importHealthData">Egészség adatok importálása</button>
+          <p id="healthImportStatus" class="alert-status"></p>
+        </section>
+      </section>
+
+      <section id="medicationsView" class="view">
+        <div class="section-head">
+          <h2 data-i18n="myMedications">Gyógyszereim</h2>
+        </div>
+
+        <form id="medicationForm" class="form-panel">
+          <label>
+            <span data-i18n="name">Név</span>
+            <input id="nameInput" required placeholder="pl. Vérnyomáscsökkentő" data-i18n-placeholder="namePlaceholder" />
+          </label>
+          <div class="schedule-editor">
+            <div class="schedule-editor-head">
+              <span data-i18n="dailySchedule">Napi időpontok</span>
+              <button id="addScheduleButton" class="small-button" type="button" data-i18n="addTime">Időpont hozzáadása</button>
+            </div>
+            <div id="scheduleRows" class="schedule-rows"></div>
+          </div>
+          <div class="dose-cycle-editor">
+            <div class="schedule-editor-head">
+              <span data-i18n="doseCycle">Ismétlődő változó adagolás</span>
+              <button id="addCycleDoseButton" class="small-button" type="button" data-i18n="addCycleDay">Nap hozzáadása</button>
+            </div>
+            <label>
+              <span data-i18n="cycleStart">Minta kezdőnapja</span>
+              <input id="cycleStartInput" type="date" />
+            </label>
+            <p class="meta" data-i18n="doseCycleHelp">Példa: 1. nap 1 tabletta, 2. nap 3/4 tabletta. A minta ezután ismétlődik.</p>
+            <div id="doseCycleRows" class="cycle-rows"></div>
+          </div>
+          <label>
+            <span data-i18n="notes">Megjegyzés</span>
+            <textarea id="notesInput" rows="3" placeholder="pl. reggeli után" data-i18n-placeholder="notesPlaceholder"></textarea>
+          </label>
+          <label>
+            <span data-i18n="medicationSource">Gyógyszer típusa</span>
+            <select id="medicationSourceInput">
+              <option value="prescribed" data-i18n="sourcePrescribed">Orvos által írt</option>
+              <option value="otc" data-i18n="sourceOtc">Nem orvosi / alkalmi</option>
+            </select>
+          </label>
+          <label>
+            <span data-i18n="interactionNotes">Kereszthatás / figyelmeztetés</span>
+            <textarea id="interactionNotesInput" rows="3" data-i18n-placeholder="interactionPlaceholder"></textarea>
+          </label>
+          <button class="primary-button" type="submit" data-i18n="addMedication">Gyógyszer hozzáadása</button>
+        </form>
+
+        <div id="medicationList" class="medication-list"></div>
+      </section>
+
+      <section id="measurementsView" class="view">
+        <div class="section-head">
+          <h2 data-i18n="measurements">Mérések</h2>
+          <button id="clearMeasurementsButton" class="ghost-button" type="button" data-i18n="clearMeasurements">Mérések törlése</button>
+        </div>
+
+        <form id="measurementForm" class="form-panel">
+          <label>
+            <span data-i18n="measurementDate">Mérés dátuma</span>
+            <input id="measurementDateInput" type="date" />
+          </label>
+          <label>
+            <span data-i18n="measurementTime">Mérés ideje</span>
+            <input id="measurementTimeInput" type="time" />
+          </label>
+          <label>
+            INR
+            <input id="inrInput" type="number" min="0.8" max="10" step="0.1" placeholder="pl. 2.4" />
+          </label>
+          <label>
+            <span data-i18n="bloodPressure">Vérnyomás</span>
+            <input id="bloodPressureInput" placeholder="pl. 125/80" />
+          </label>
+          <label>
+            <span data-i18n="pulse">Pulzus</span>
+            <input id="pulseInput" type="number" min="30" max="220" step="1" placeholder="pl. 72" />
+          </label>
+          <label>
+            <span data-i18n="weight">Súly</span>
+            <input id="weightInput" type="number" min="20" max="250" step="0.1" placeholder="pl. 82.5" />
+          </label>
+          <label>
+            <span data-i18n="steps">Lépésszám</span>
+            <input id="stepsInput" type="number" min="0" step="1" placeholder="pl. 4500" />
+          </label>
+          <label>
+            <span data-i18n="temperature">Testhő</span>
+            <input id="temperatureInput" type="number" min="30" max="45" step="0.1" placeholder="pl. 36.8" />
+          </label>
+          <label class="wide-field">
+            <span data-i18n="notes">Megjegyzés</span>
+            <textarea id="measurementNotesInput" rows="3" placeholder="pl. reggel, gyógyszer előtt" data-i18n-placeholder="measurementNotesPlaceholder"></textarea>
+          </label>
+          <button id="saveMeasurementButton" class="primary-button" type="submit" data-i18n="saveMeasurement">Mérés mentése</button>
+          <button id="cancelMeasurementEditButton" class="ghost-button" type="button" hidden data-i18n="cancelEdit">Mégse</button>
+        </form>
+
+        <div id="latestMeasurements" class="summary-grid"></div>
+        <div id="measurementList" class="history-list"></div>
+      </section>
+
+      <section id="chartsView" class="view">
+        <div class="section-head">
+          <h2 data-i18n="charts">Grafikonok</h2>
+        </div>
+        <div id="chartsContent" class="chart-grid"></div>
+      </section>
+
+      <section id="tablesView" class="view">
+        <div class="section-head">
+          <h2 data-i18n="tables">Táblázatok</h2>
+        </div>
+        <div id="tablesContent" class="table-stack"></div>
+      </section>
+
+      <section id="exportView" class="view">
+        <div class="section-head">
+          <h2 data-i18n="export">Export</h2>
+          <button id="printPdfButton" class="primary-button" type="button" data-i18n="printPdf">PDF mentés / nyomtatás</button>
+        </div>
+        <div id="exportContent" class="export-paper"></div>
+      </section>
+
+      <section id="historyView" class="view">
+        <div class="section-head">
+          <h2 data-i18n="medicationDiary">Gyógyszernapló</h2>
+          <button id="clearHistoryButton" class="ghost-button" type="button" data-i18n="clearHistory">Előzmény törlése</button>
+        </div>
+        <form id="manualIntakeForm" class="form-panel">
+          <h3 data-i18n="manualIntakeTitle">Gyógyszerbevétel utólagos rögzítése</h3>
+          <div class="form-grid">
+            <label>
+              <span data-i18n="medications">Gyógyszerek</span>
+              <select id="manualMedicationInput" required></select>
+            </label>
+            <label>
+              <span data-i18n="measurementDate">Mérés dátuma</span>
+              <input id="manualIntakeDateInput" type="date" required />
+            </label>
+            <label>
+              <span data-i18n="time">Időpont</span>
+              <input id="manualIntakeTimeInput" type="time" required />
+            </label>
+            <label>
+              <span data-i18n="dose">Adag</span>
+              <input id="manualIntakeDoseInput" placeholder="pl. 1 tabletta" />
+            </label>
+          </div>
+          <button class="primary-button" type="submit" data-i18n="saveIntakeLog">Bevétel mentése a naplóba</button>
+        </form>
+        <div id="historyList" class="history-list"></div>
+      </section>
+    </main>
+    <script>
 const STORAGE_KEY = "medication-check-prototype-v1";
 const LANGUAGE_KEY = `${STORAGE_KEY}-language`;
 
@@ -2277,3 +3483,7 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
 
 render();
 setInterval(checkDueDoses, 1000);
+
+    </script>
+  </body>
+</html>

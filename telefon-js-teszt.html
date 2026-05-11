@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Telefon JS teszt</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 24px; }
+      button { width: 100%; min-height: 52px; font-size: 18px; }
+      #result { margin-top: 20px; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <h1>Telefon JS teszt</h1>
+    <p>Nyomd meg a gombot. Ha a szöveg megváltozik, a telefon futtatja a JavaScriptet.</p>
+    <button id="testButton" type="button">Teszt gomb</button>
+    <p id="result">Még nincs kattintás.</p>
+    <script>
+      document.getElementById("testButton").addEventListener("click", function () {
+        document.getElementById("result").textContent = "Működik: " + new Date().toLocaleTimeString();
+      });
+    </script>
+  </body>
+</html>

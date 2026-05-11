@@ -45,7 +45,7 @@
         <button class="tab" data-view="charts" data-i18n="charts">Grafikonok</button>
         <button class="tab" data-view="tables" data-i18n="tables">Táblázatok</button>
         <button class="tab" data-view="export" data-i18n="export">Export</button>
-        <button class="tab" data-view="history" data-i18n="history">Előzmény</button>
+        <button class="tab" data-view="history" data-i18n="medicationDiary">Gyógyszernapló</button>
         <button class="tab" data-view="settings" data-i18n="settings">Beállítások</button>
       </nav>
 
@@ -265,9 +265,31 @@
 
       <section id="historyView" class="view">
         <div class="section-head">
-          <h2 data-i18n="history">Előzmény</h2>
+          <h2 data-i18n="medicationDiary">Gyógyszernapló</h2>
           <button id="clearHistoryButton" class="ghost-button" type="button" data-i18n="clearHistory">Előzmény törlése</button>
         </div>
+        <form id="manualIntakeForm" class="form-panel">
+          <h3 data-i18n="manualIntakeTitle">Gyógyszerbevétel utólagos rögzítése</h3>
+          <div class="form-grid">
+            <label>
+              <span data-i18n="medications">Gyógyszerek</span>
+              <select id="manualMedicationInput" required></select>
+            </label>
+            <label>
+              <span data-i18n="measurementDate">Mérés dátuma</span>
+              <input id="manualIntakeDateInput" type="date" required />
+            </label>
+            <label>
+              <span data-i18n="time">Időpont</span>
+              <input id="manualIntakeTimeInput" type="time" required />
+            </label>
+            <label>
+              <span data-i18n="dose">Adag</span>
+              <input id="manualIntakeDoseInput" placeholder="pl. 1 tabletta" />
+            </label>
+          </div>
+          <button class="primary-button" type="submit" data-i18n="saveIntakeLog">Bevétel mentése a naplóba</button>
+        </form>
         <div id="historyList" class="history-list"></div>
       </section>
     </main>
