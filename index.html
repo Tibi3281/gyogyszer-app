@@ -266,7 +266,7 @@
       <section id="historyView" class="view">
         <div class="section-head">
           <h2 data-i18n="medicationDiary">Gyógyszernapló</h2>
-          <button id="clearHistoryButton" class="ghost-button" type="button" data-i18n="clearHistory">Előzmény törlése</button>
+          <button id="clearHistoryButton" class="ghost-button" type="button" data-i18n="clearDiary">Gyógyszernapló törlése</button>
         </div>
         <form id="manualIntakeForm" class="form-panel">
           <h3 data-i18n="manualIntakeTitle">Gyógyszerbevétel utólagos rögzítése</h3>
@@ -275,12 +275,16 @@
               <span data-i18n="medications">Gyógyszerek</span>
               <select id="manualMedicationInput" required></select>
             </label>
+            <label id="manualMedicationNameField" hidden>
+              <span data-i18n="manualMedicationName">Gyógyszer neve</span>
+              <input id="manualMedicationNameInput" placeholder="pl. fájdalomcsillapító" />
+            </label>
             <label>
-              <span data-i18n="measurementDate">Mérés dátuma</span>
+              <span data-i18n="intakeDate">Bevétel dátuma</span>
               <input id="manualIntakeDateInput" type="date" required />
             </label>
             <label>
-              <span data-i18n="time">Időpont</span>
+              <span data-i18n="intakeTime">Bevétel ideje</span>
               <input id="manualIntakeTimeInput" type="time" required />
             </label>
             <label>

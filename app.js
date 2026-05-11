@@ -53,6 +53,12 @@ const translations = {
     saveIntakeLog: "Bevétel mentése a naplóba",
     manualIntakeSaved: "Bevétel elmentve a gyógyszernaplóba.",
     noMedicationForDiary: "Előbb vegyél fel legalább egy gyógyszert.",
+    manualMedicationOption: "Más gyógyszer kézzel",
+    manualMedicationName: "Gyógyszer neve",
+    manualMedicationNameRequired: "Add meg a gyógyszer nevét.",
+    intakeDate: "Bevétel dátuma",
+    intakeTime: "Bevétel ideje",
+    clearDiary: "Gyógyszernapló törlése",
     medicineTime: "Gyógyszer ideje",
     alarmHelp: "Nyomd meg a Bevettem gombot, ha megtörtént.",
     taken: "Bevettem",
@@ -202,6 +208,12 @@ const translations = {
     saveIntakeLog: "Save intake to diary",
     manualIntakeSaved: "Intake saved to the medication diary.",
     noMedicationForDiary: "Add at least one medication first.",
+    manualMedicationOption: "Other medication manually",
+    manualMedicationName: "Medication name",
+    manualMedicationNameRequired: "Enter the medication name.",
+    intakeDate: "Intake date",
+    intakeTime: "Intake time",
+    clearDiary: "Clear medication diary",
     medicineTime: "Medication time",
     alarmHelp: "Press Taken once you have taken it.",
     taken: "Taken",
@@ -351,6 +363,12 @@ const translations = {
     saveIntakeLog: "Einnahme im Tagebuch speichern",
     manualIntakeSaved: "Einnahme im Medikamententagebuch gespeichert.",
     noMedicationForDiary: "Lege zuerst mindestens ein Medikament an.",
+    manualMedicationOption: "Anderes Medikament manuell",
+    manualMedicationName: "Medikamentenname",
+    manualMedicationNameRequired: "Gib den Medikamentennamen ein.",
+    intakeDate: "Einnahmedatum",
+    intakeTime: "Einnahmezeit",
+    clearDiary: "Medikamententagebuch löschen",
     medicineTime: "Zeit für das Medikament",
     alarmHelp: "Drücke Eingenommen, wenn du es genommen hast.",
     taken: "Eingenommen",
@@ -560,6 +578,8 @@ const medicationList = document.querySelector("#medicationList");
 const historyList = document.querySelector("#historyList");
 const manualIntakeForm = document.querySelector("#manualIntakeForm");
 const manualMedicationInput = document.querySelector("#manualMedicationInput");
+const manualMedicationNameField = document.querySelector("#manualMedicationNameField");
+const manualMedicationNameInput = document.querySelector("#manualMedicationNameInput");
 const manualIntakeDateInput = document.querySelector("#manualIntakeDateInput");
 const manualIntakeTimeInput = document.querySelector("#manualIntakeTimeInput");
 const manualIntakeDoseInput = document.querySelector("#manualIntakeDoseInput");
@@ -816,6 +836,10 @@ function syncMeasurementEditState() {
 function syncManualIntakeDose() {
   if (!manualMedicationInput || !manualIntakeDoseInput) return;
   if (manualIntakeDoseInput.dataset.userEdited === "true") return;
+  if (manualMedicationInput.value === "__manual__") {
+    manualIntakeDoseInput.value = "";
+    return;
+  }
 
   const medication = (state.medications || []).find((item) => item.id === manualMedicationInput.value);
   const day = manualIntakeDateInput?.value || todayKey();
@@ -1102,20 +1126,28 @@ function renderManualIntakeForm() {
 
   const selected = manualMedicationInput.value;
   const medications = state.medications || [];
-  manualMedicationInput.innerHTML = medications.length
-    ? medications
-        .map((medication) => `<option value="${medication.id}">${escapeHtml(displayMedicationName(medication.name))}</option>`)
-        .join("")
-    : `<option value="">${t("noMedicationForDiary")}</option>`;
+  const medicationOptions = medications
+    .map((medication) => `<option value="${medication.id}">${escapeHtml(displayMedicationName(medication.name))}</option>`)
+    .join("");
+
+  manualMedicationInput.innerHTML = `
+    ${medicationOptions}
+    <option value="__manual__">${t("manualMedicationOption")}</option>
+  `;
 
   if (selected && medications.some((medication) => medication.id === selected)) {
     manualMedicationInput.value = selected;
+  } else if (selected === "__manual__" || medications.length === 0) {
+    manualMedicationInput.value = "__manual__";
   }
 
-  manualMedicationInput.disabled = medications.length === 0;
+  manualMedicationInput.disabled = false;
+  const isManualMedication = manualMedicationInput.value === "__manual__";
+  if (manualMedicationNameField) manualMedicationNameField.hidden = !isManualMedication;
+  if (manualMedicationNameInput) manualMedicationNameInput.required = isManualMedication;
   if (manualIntakeForm) {
     const submitButton = manualIntakeForm.querySelector("button[type='submit']");
-    if (submitButton) submitButton.disabled = medications.length === 0;
+    if (submitButton) submitButton.disabled = false;
   }
 
   if (manualIntakeDateInput && !manualIntakeDateInput.value) manualIntakeDateInput.value = todayKey();
@@ -1924,6 +1956,8 @@ doseList.addEventListener("click", (event) => {
 
 manualMedicationInput?.addEventListener("change", () => {
   if (manualIntakeDoseInput) manualIntakeDoseInput.dataset.userEdited = "";
+  if (manualMedicationNameField) manualMedicationNameField.hidden = manualMedicationInput.value !== "__manual__";
+  if (manualMedicationNameInput) manualMedicationNameInput.required = manualMedicationInput.value === "__manual__";
   syncManualIntakeDose();
 });
 
@@ -1941,24 +1975,27 @@ manualIntakeDoseInput?.addEventListener("input", () => {
 manualIntakeForm?.addEventListener("submit", (event) => {
   event.preventDefault();
 
-  const medication = (state.medications || []).find((item) => item.id === manualMedicationInput.value);
-  if (!medication) {
-    showTemporaryStatus(t("noMedicationForDiary"));
+  const isManualMedication = manualMedicationInput.value === "__manual__";
+  const medication = isManualMedication ? null : (state.medications || []).find((item) => item.id === manualMedicationInput.value);
+  const manualName = manualMedicationNameInput?.value.trim() || "";
+
+  if (!medication && !manualName) {
+    showTemporaryStatus(isManualMedication ? t("manualMedicationNameRequired") : t("noMedicationForDiary"));
     return;
   }
 
   const day = manualIntakeDateInput.value || todayKey();
   const time = manualIntakeTimeInput.value || localTimeValue(new Date());
   const takenAt = new Date(`${day}T${time}:00`);
-  const schedules = normalizeSchedule(medication);
+  const schedules = medication ? normalizeSchedule(medication) : [];
   const schedule = schedules.find((item) => item.time === time) || schedules[0] || { id: createId(), dose: "" };
-  const dose = manualIntakeDoseInput.value.trim() || doseForDay(medication, schedule, day) || schedule.dose || "";
+  const dose = manualIntakeDoseInput.value.trim() || (medication ? doseForDay(medication, schedule, day) : "") || schedule.dose || "";
 
   state.logs.push({
     id: createId(),
-    medicationId: medication.id,
+    medicationId: medication?.id || `manual-${createId()}`,
     scheduleId: schedule.id,
-    name: medication.name,
+    name: medication?.name || manualName,
     dose,
     time,
     day,

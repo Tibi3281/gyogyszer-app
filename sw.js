@@ -1,4 +1,4 @@
-const CACHE_NAME = "gyogyszerellenorzo-v2";
+const CACHE_NAME = "gyogyszerellenorzo-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
